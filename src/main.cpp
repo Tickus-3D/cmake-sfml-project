@@ -1,21 +1,24 @@
-#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+#include <iostream>
 
 int main()
 {
-    auto window = sf::RenderWindow{ { 1920u, 1080u }, "CMake SFML Project" };
-    window.setFramerateLimit(60);
-
-    while (window.isOpen())
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile("D A N C I N.ogg"))
     {
-        for (auto event = sf::Event{}; window.pollEvent(event);)
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                window.close();
-            }
-        }
-
-        window.clear();
-        window.display();
+        std::cout << "Error loading sound file" << std::endl;
+        return -1;
     }
+
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+
+    sound.play();
+
+    while (sound.getStatus() == sf::Sound::Playing)
+    {
+        sf::sleep(sf::seconds(0.1f));
+    }
+
+    return 0;
 }
