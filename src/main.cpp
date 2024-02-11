@@ -2,9 +2,12 @@
 #include <iostream>
 #include "GameWindow.h"
 #include "EventManager.h"
+#include "World.h"
 #include "TestClass.h"
 
-void HandleText(float& timer, float& delay, int &number, float deltaTime, sf::Text &text);
+void updateFunc(float deltaTime, float& timer, float& delay, sf::Text& text, sf::RectangleShape& backGround, World& world);
+void  FixedUpdate(float& timer, float& delay, float deltaTime, sf::Text& text, sf::RectangleShape& backGround, World& world);
+
 
 int main()
 {
@@ -13,7 +16,7 @@ int main()
 
     EventManager eventManager{};
 
-    sf::Clock clock;
+    sf::Clock clock; 
 
     sf::Font font;
     if (!font.loadFromFile("C:/Users/Kyle/Documents/GitHub/cmake-sfml-project/Content/Sixtyfour/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf"))
@@ -22,15 +25,21 @@ int main()
         return EXIT_FAILURE;
     }
 
+    VertexArray gridWorld;
+    World world;
+
+    gridWorld = world.DrawWorldGrid(window.getRenderWindow(), 64, 64);
+
     float timer = 0.0f;
     float delay = 1.0f;
 
-    int number = 0;
-    std::string numberStr = std::to_string(number);
-
-    sf::Text text("Hello SFML " + numberStr, font, 24);
-    text.setPosition(sf::Vector2f(100, 50));
+    sf::Text text(world.GetFormatedWorldTime(), font, 14);
+    text.setPosition(sf::Vector2f(8, 12));
     text.setFillColor(sf::Color::Green);
+
+    sf::RectangleShape worldTextBackGround(sf::Vector2f(window.getRenderWindow().getView().getSize().x, 32));
+    worldTextBackGround.setPosition(sf::Vector2f(0, 0));
+    worldTextBackGround.setFillColor(sf::Color::Black);
 
     // Start the game loop
     while (window.isOpen())
@@ -39,7 +48,6 @@ int main()
         float deltaTime = dt.asSeconds();
 
         // Process events
-        sf::Event event;
         while (eventManager.pollEvent(window.getRenderWindow()))
         {
             if (eventManager.isWindowClosed())
@@ -50,11 +58,12 @@ int main()
 
 
         window.clear();
+
+        updateFunc(deltaTime, timer, delay, text, worldTextBackGround, world);
         
-        HandleText(timer, delay, number, deltaTime, text);
-
+        window.draw(gridWorld);
+        window.draw(worldTextBackGround);
         window.draw(text);
-
 
         window.display();
     }
@@ -62,20 +71,25 @@ int main()
     return EXIT_SUCCESS;
 }
 
-void HandleText(float& timer, float& delay, int& number, float deltaTime, sf::Text& text)
+void updateFunc(float deltaTime, float& timer, float& delay, sf::Text& text, sf::RectangleShape& backGround, World& world)
+{
+
+    // FixedUpdates() -> Updates PerSecond changing delay changes the frequency of the update
+    FixedUpdate(timer, delay, deltaTime, text, backGround, world); 
+}
+
+void FixedUpdate(float& timer, float& delay, float deltaTime, sf::Text& text, sf::RectangleShape& backGround, World& world)
 {
     timer += deltaTime;
     if (timer >= delay)
     {
-        timer = 0.0f;
 
-        number++;
-        if (number >= 50)
-        {
-            number = 0;
-        }
-        std::string numberStr = std::to_string(static_cast<int>(number));
-        text.setString("Hello SFML " + numberStr);
+        timer = 0.0f;
+ 
+        world.UpdateWorldTime();
+        text.setString(world.GetFormatedWorldTime());
     }
 
 }
+
+
